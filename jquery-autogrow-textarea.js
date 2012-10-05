@@ -21,9 +21,31 @@
      * Actual initialization
      */
     function init() {
-        var $textarea, $origin, origin, hasOffset, innerHeight, height, offset = 0;
+        var $this, $textarea, $origin, origin, hasOffset, innerHeight, height, offset = 0;
 
-        $textarea = $(this).css({overflow: 'hidden', resize: 'none'});
+        var $this = $(this);
+        if($this.is('input')) {
+            var attributes = {};
+            
+            // remove all attributes that are valid for inputs but not textareas
+            $this.removeAttr('accept alt autocomplete checked formaction formenctype formmethod formnovalidate formtarget height list max min multiple pattern size src step width');
+
+            // loop over the remaining attributes and write them into an object
+            $.each($this[0].attributes, function(index, attr) {
+                // due to a jquery bug the type attribute can't be changed/removed, so we are filtering it out here
+                if(attr.name !== 'type') {
+                    attributes[attr.name] = attr.value;
+                }
+            });
+            
+            // then apply the attributes to a newly created textarea, insert it before the input and remove the latter
+            var $textarea = $('<textarea></textarea>').insertAfter($this).attr(attributes).data('expanding-input', attributes);
+            $this.remove();
+
+            $this = $textarea;
+        }
+        
+        $textarea = $this.css({overflow: 'hidden', resize: 'none'});
         $origin = $textarea.clone().val('').appendTo(doc.body);
         origin = $origin.get(0);
 
